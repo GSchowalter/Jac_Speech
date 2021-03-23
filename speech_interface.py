@@ -7,13 +7,17 @@ import datetime as datetime
 import deepspeech
 from halo import Halo
 
-def main(ARGS):
+def open_socket():
     sock = socket.socket()         # Create a socket object
     host = '127.0.0.1' # Get local machine name
     port = 2500             # Reserve a port for your service.
     sock.connect((host, port))
-    print(sock.recv(1024))
-    sock.close()                    # Close the socket when done
+    return sock
+
+def main(ARGS):
+
+    sock = open_socket()
+
     # Load DeepSpeech model
     if os.path.isdir(ARGS.model):
         model_dir = ARGS.model
@@ -54,8 +58,10 @@ def main(ARGS):
                 vad_audio.write_wav(os.path.join(ARGS.savewav, datetime.now().strftime("savewav_%Y-%m-%d_%H-%M-%S_%f.wav")), wav_data)
                 wav_data = bytearray()
             text = stream_context.finishStream()
-            print("Recognized: %s" % text)
+            sock.sendall(text.encode())
+            # print("Recognized: %s" % text)
             stream_context = model.createStream()
+    sock.close()
 
 if __name__ == '__main__':
     DEFAULT_SAMPLE_RATE = 16000

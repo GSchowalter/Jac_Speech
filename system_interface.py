@@ -6,9 +6,15 @@ host = ''
 port = 2500
 sock = socket.socket()
 sock.bind((host, port))
-sock.listen(5)
+sock.listen(1)
+c, addr = sock.accept()     # Establish connection with client.
 while True:
-   c, addr = sock.accept()     # Establish connection with client.
    print('Got connection from: {}', addr)
-   c.send('Thank you for connecting')
-   c.close()                # Close the connection
+   c.send('Thank you for connecting'.encode())
+   text = c.recv(1024)
+   fo = open("Log.txt", "w")
+   fo.write(text.decode())
+   print("Data: %s" %text.decode())
+   if("stop" in text.decode()):
+      c.close()                # Close the connection
+      break

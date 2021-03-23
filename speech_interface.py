@@ -40,26 +40,16 @@ def main(ARGS):
     frames = vad_audio.vad_collector()
 
     # Stream from microphone to DeepSpeech using VAD
-    spinner = None
-    if not ARGS.nospinner:
-        spinner = Halo(spinner='line')
     stream_context = model.createStream()
     wav_data = bytearray()
     for frame in frames:
         if frame is not None:
-            if spinner: spinner.start()
             logging.debug("streaming frame")
             stream_context.feedAudioContent(np.frombuffer(frame, np.int16))
-            if ARGS.savewav: wav_data.extend(frame)
         else:
-            if spinner: spinner.stop()
             logging.debug("end utterence")
-            if ARGS.savewav:
-                vad_audio.write_wav(os.path.join(ARGS.savewav, datetime.now().strftime("savewav_%Y-%m-%d_%H-%M-%S_%f.wav")), wav_data)
-                wav_data = bytearray()
             text = stream_context.finishStream()
             sock.sendall(text.encode())
-            # print("Recognized: %s" % text)
             stream_context = model.createStream()
     sock.close()
 
@@ -71,13 +61,8 @@ if __name__ == '__main__':
 
     parser.add_argument('-v', '--vad_aggressiveness', type=int, default=3,
                         help="Set aggressiveness of VAD: an integer between 0 and 3, 0 being the least aggressive about filtering out non-speech, 3 the most aggressive. Default: 3")
-    parser.add_argument('--nospinner', action='store_true',
-                        help="Disable spinner")
-    parser.add_argument('-w', '--savewav',
-                        help="Save .wav files of utterences to given directory")
     parser.add_argument('-f', '--file',
                         help="Read from .wav file instead of microphone")
-
     parser.add_argument('-m', '--model', required=True,
                         help="Path to the model (protocol buffer binary file, or entire directory containing all standard-named files for model)")
     parser.add_argument('-s', '--scorer',
@@ -88,5 +73,4 @@ if __name__ == '__main__':
                         help="Input device sample rate. Default: {DEFAULT_SAMPLE_RATE}. Your device may require 44100.")
 
     ARGS = parser.parse_args()
-    if ARGS.savewav: os.makedirs(ARGS.savewav, exist_ok=True)
     main(ARGS)

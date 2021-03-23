@@ -8,10 +8,10 @@ sock = socket.socket()
 sock.bind((host, port))
 sock.listen(1)
 c, addr = sock.accept()     # Establish connection with client.
+print('Got connection from: {}', addr)
+
 while True:
-   print('Got connection from: {}', addr)
-   c.send('Thank you for connecting'.encode())
-   text = c.recv(1024)
+   text = c.recv(2048)
    fo = open("Log.txt", "w")
    fo.write(text.decode())
    print("Data: %s" %text.decode())
